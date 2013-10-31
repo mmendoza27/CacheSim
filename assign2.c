@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
       return 1;
    }
 
-   if (!(atoi(argv[2]) < atoi(argv[1]))) {
+   if (!(atoi(argv[2]) <= atoi(argv[1]))) {
       fprintf(stderr, "Block size cannot be larger than the cache size.\n");
       return 1;
    }
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
                                /* Calculate the tag, index, and offset values */
    int index = atoi(argv[1]) - atoi(argv[2]);
    int offset = atoi(argv[2]);
-   int tag = 32 - index - offset;
+   //int tag = 32 - index - offset;
 
                           /* Turn on tracing based on the input from the user */
    if (strcmp(argv[3], "on") == 0) {
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 
       accesses++;
 
-      shiftValue = pow(2, MAX_SZ) - pow(2, tag);
+      shiftValue = pow(2, MAX_SZ) - pow(2, atoi(argv[1]));
       tagValue = hexAddress & shiftValue;
       tagValue = tagValue >> atoi(argv[1]);
 
@@ -133,18 +133,20 @@ int main(int argc, char *argv[]) {
       }
 
       missRatio = (float) misses / (float) accesses;
-
-      if (oldTagValue == -1) {
-         printf("|%8x|%8x|%8x|%8s|%5s|%7d|%7d|%8d|%.8f|", 
-            hexAddress, tagValue, blockNumber, " ", hitOrMiss, hits, 
-            misses, accesses, missRatio);
-      } else {
-         printf("|%8x|%8x|%8x|%8d|%5s|%7d|%7d|%8d|%.8f|", 
-            hexAddress, tagValue, blockNumber, oldTagValue, hitOrMiss, hits, 
-            misses, accesses, missRatio);
-      }
       
-      printf("\n");
+      if (tracing) {
+         if (oldTagValue == -1) {
+            printf("|%8x|%8x|%8x|%8s|%5s|%7d|%7d|%8d|%.8f|", 
+               hexAddress, tagValue, blockNumber, " ", hitOrMiss, hits, 
+               misses, accesses, missRatio);
+         } else {
+            printf("|%8x|%8x|%8x|%8d|%5s|%7d|%7d|%8d|%.8f|", 
+               hexAddress, tagValue, blockNumber, oldTagValue, hitOrMiss, hits, 
+               misses, accesses, missRatio);
+         }
+      
+         printf("\n");
+      }
    }
 
                                    /* Print the table footer if tracing is on */
