@@ -1,0 +1,27 @@
+Code Changes and Explanation
+================================================================================
+While moving over my CacheSimulator program onto the ELK machines, I apparently
+copied an older, incorrect copy of my program. If you look at my older code, the
+main mistake lies on page 4. When I am shifting values in order to get the tag,
+I take 2^32 - 2^tag and use that as a shift value.
+
+This was causing me to get an incorrect tag and receive the same tag numerous
+times. Once I did my comparison, both values were equal to each other 99% of the
+time and it was causing my hits to be extremely high. Again, this was because I
+was not shifting my hexadecimal address by the right value.
+
+In the correct code, I used the 2^32 - 2^Cache size to get my shift value. I
+learned this was incorrect while testing the application more thoroughly. In the
+tests run before class, 2^32 - 2^tag (16) and 2^32 - 2^Cache size (16) were the
+same and it wasn't until I used a cache size less than 16 where the problem
+arose. Since I no longer needed to use the tag in my code, I commented it out
+and you can see that on page 3.
+
+Now that I'm shifting the hexadecimal address correctly, my tags are different
+(although not by much, but that's fine). Since comparing the tags affects the
+hit count, fixing this issue brought my hit count in line with the correct
+results. You can compare my answers on the cover sheet for accuracy.
+
+I apologize for saving the incorrect code on the ELK machines and I understand
+it's been a headache since the assignment due date. Thank you for allowing me to
+provide the corrected solution of my code.
