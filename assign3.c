@@ -28,10 +28,11 @@ int main(int argc, char *argv[]) {
    int associativity = 0;
    int hits = 0;
    int misses = 0;
-   int oldTagValue;
+   int *oldTagValue;
 
        /* This turns on verbose, fifo, or lru mode. It is basically a boolean */
    int fifo;
+   int found;
    int lru;
    int tracing;
 
@@ -68,8 +69,8 @@ int main(int argc, char *argv[]) {
    //int tag = 32 - index - offset;
 
                        /* Set the associativity (0 = direct, 1 = 2-way, etc.) */
-   if ((atoi(argv[3]) < 0) || (atoi(argv[3]) > index)) {
-      associativity = index;
+   if ((atoi(argv[3]) < 0) || (atoi(argv[3]) >= index)) {
+      associativity = 0;
    } else {
       associativity = atoi(argv[3]);
    }
@@ -101,18 +102,19 @@ int main(int argc, char *argv[]) {
       return 1;
    }
 
-                       /* Set up the array that holds the tags and init to -1 */
+                          /* Initializing the array that simulates the cache. */
    int **cache;
    int cacheSize;
    int i;
    int j;
 
-   if (associativity == 0 || associativity == index) {
+   if (associativity == 0) {
       cacheSize = pow(2, index);      
       cache = (int **)malloc(cacheSize * sizeof(int *));
 
       for (i = 0; i < cacheSize; i++) {
         cache[i] = (int *)malloc(1 * sizeof(int));
+        oldTagValue = (int *)malloc(1 * sizeof(int));
       }
 
    } else {
@@ -120,13 +122,14 @@ int main(int argc, char *argv[]) {
       cache = (int **)malloc(cacheSize * sizeof(int *));
 
       for (i = 0; i < cacheSize; i++) {
-        cache[i] = (int *)malloc(associativity * sizeof(int));
+        cache[i] = (int *)malloc((int) pow(2, associativity) * sizeof(int));
+        oldTagValue = (int *)malloc((int) pow(2, associativity) * sizeof(int));
       }
 
    }
 
    for(i = 0; i < cacheSize; i++) {
-      for (j = 0; j < associativity; j++) {
+      for (j = 0; j < pow(2, associativity); j++) {
         cache[i][j] = -1;
       }
    }
@@ -147,12 +150,13 @@ int main(int argc, char *argv[]) {
       hexAddress = strtoul(lineBuffer, NULL, 0);
 
       accesses++;
+      found = FALSE;
 
       shiftValue = pow(2, MAX_SZ) - pow(2, (atoi(argv[1]) - associativity));
       tagValue = hexAddress & shiftValue;
       tagValue = tagValue >> (atoi(argv[1]) - associativity);
 
-      if (associativity == 0 || associativity == index) {
+      if (associativity == 0) {
         setNumber = 1;
       } else {
         setNumber = hexAddress >> (atoi(argv[2]));
@@ -162,36 +166,55 @@ int main(int argc, char *argv[]) {
       shiftValue = pow(2, atoi(argv[1])) - pow(2, offset);
       blockNumber = hexAddress & shiftValue;
       blockNumber = blockNumber >> offset;
-
       int indexValue = (int) blockNumber;
 
-      oldTagValue = cache[indexValue][0];
-
-      if (oldTagValue == -1) {
-         hitOrMiss = "Miss";
-         cache[indexValue][0] = tagValue;
-         misses++;
-      } else {
-         if (tagValue == oldTagValue) {
-            hitOrMiss = "Hit";
+      // New Associativity Code
+      for(i = 0; i < pow(2, associativity); i++) {
+         if (tagValue == cache[setNumber][i]) {
+            // Tag is found inside the set somewhere, we have a hit.
             hits++;
-         } else {
-            hitOrMiss = "Miss";
-            cache[indexValue][0] = tagValue;
-            misses++;
+            hitOrMiss = "Hit";
+            found = TRUE;
          }
       }
+
+      if (!found) {
+         hitOrMiss = "Miss";
+         cache[setNumber][0] = tagValue;
+         misses++;
+      }
+
+      // Old Direct Mapped Code
+      // oldTagValue[0] = cache[setNumber][0];
+
+      // if (oldTagValue[0] == -1) {
+      //    // If the field contains -1, it's an "empty" entry.
+      //    hitOrMiss = "Miss";
+      //    cache[setNumber][0] = tagValue;
+      //    misses++;
+      // } else {
+      //    if (tagValue == oldTagValue[0]) {
+      //       // If tag is found inside set, you have a hit.
+      //       hitOrMiss = "Hit";
+      //       hits++;
+      //    } else {
+      //       // If tag is not found anywhere inside set, you have a miss.
+      //       hitOrMiss = "Miss";
+      //       cache[setNumber][0] = tagValue;
+      //       misses++;
+      //    }
+      // }
 
       missRatio = (float) misses / (float) accesses;
       
       if (tracing) {
-         if (oldTagValue == -1) {
-            printf("|%8x|%8x|%8x|%8s|%5s|%7d|%7d|%8d|%.8f|", 
+         if (oldTagValue[0] == -1) {
+            printf("|%8x|%8x|%8d|%8s|%5s|%7d|%7d|%8d|%.8f|", 
                hexAddress, tagValue, setNumber, " ", hitOrMiss, hits, 
                misses, accesses, missRatio);
          } else {
-            printf("|%8x|%8x|%8x|%8d|%5s|%7d|%7d|%8d|%.8f|", 
-               hexAddress, tagValue, setNumber, oldTagValue, hitOrMiss, hits, 
+            printf("|%8x|%8x|%8d|%8d|%5s|%7d|%7d|%8d|%.8f|", 
+               hexAddress, tagValue, setNumber, oldTagValue[0], hitOrMiss, hits,
                misses, accesses, missRatio);
          }
       
