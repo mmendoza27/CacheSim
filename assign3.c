@@ -332,6 +332,7 @@ int main(int argc, char *argv[]) {
 
       } else if (fullyAssociative) {
          // Do fully associative code here.
+         // Will need to go through whole array and use FIFO and LRU algorithms.
       }
 
    }
