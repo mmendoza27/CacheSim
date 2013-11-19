@@ -261,24 +261,28 @@ int main(int argc, char *argv[]) {
          }
 
          if (lru) {
-            for(i = 0; i < pow(2, associativity); i++) {
+            for(i = pow(2, associativity); i > 0; i--) {
                if (cache[setNumber][i] == tagValue) {
                   hitOrMiss = "Hit";
                   hits++;
                   found = TRUE;
 
-                  for(j = i; j < (lastIndex - 1); j++) {
+                  for(j = i; j < pow(2, associativity); j++) {
                      cache[setNumber][j] = cache[setNumber][(j + 1)];
                   }
 
-                  cache[setNumber][(lastIndex - 1)] = tagValue;
+                  cache[setNumber][j] = tagValue;
                   break;
-               } else if (cache[setNumber][i] == -1) {
+               } else if (cache[setNumber][i] == - 1) {
                   hitOrMiss = "Miss";
                   misses++;
                   found = TRUE;
-                  cache[setNumber][i] = tagValue;
-                  lastIndex++;
+
+                  for(j = 0; j < pow(2, associativity); j++) {
+                     cache[setNumber][j] = cache[setNumber][(j + 1)];
+                  }
+
+                  cache[setNumber][j] = tagValue;
                   break;
                }
             }
@@ -288,7 +292,7 @@ int main(int argc, char *argv[]) {
                hitOrMiss = "Miss";
                misses++;
 
-               for(j = 0; j < ((pow(2, associativity)) - 1); j++) {
+               for(j = 0; j < pow(2, associativity); j++) {
                   cache[setNumber][j] = cache[setNumber][(j + 1)];
                }
 
