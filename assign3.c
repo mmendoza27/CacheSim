@@ -160,7 +160,6 @@ int main(int argc, char *argv[]) {
    for(i = 0; i < cacheSize; i++) {
       for (j = 0; j < pow(2, associativity); j++) {
          cache[i][j] = -1;
-         printf("[%d][%d]:[%d]\n", i, j, cache[i][j]);
       }
    }
 
