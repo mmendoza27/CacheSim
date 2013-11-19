@@ -159,13 +159,9 @@ int main(int argc, char *argv[]) {
 
    for(i = 0; i < cacheSize; i++) {
       for (j = 0; j < pow(2, associativity); j++) {
-         //fprintf(stdout, "[%d][%d]: ", i, j);
          cache[i][j] = -1;
-         //fprintf(stdout, "[%d] ", cache[i][j]);
       }
-      //fprintf(stdout, "\n");
    }
-   //fprintf(stdout, "\n");
 
                                   /* Create the table header if tracing is on */
    if (tracing) {
@@ -207,8 +203,6 @@ int main(int argc, char *argv[]) {
       }
 
       if (directMapped) {
-         //oldTagValue[0] = cache[indexValue][0];
-
          if (tagValue == cache[indexValue][0]) {
             // If tag is found inside set, you have a hit.
             hitOrMiss = "Hit";
@@ -283,11 +277,6 @@ int main(int argc, char *argv[]) {
                   hitOrMiss = "Miss";
                   misses++;
                   found = TRUE;
-
-                  // for(j = 0; j < (cacheSize - 1); j++) {
-                  //    cache[j][0] = cache[(j + 1)][0];
-                  // }
-
                   cache[setNumber][i] = tagValue;
                   lastIndex++;
                   break;
@@ -306,43 +295,6 @@ int main(int argc, char *argv[]) {
                cache[setNumber][j] = tagValue;
             }
 
-            // for(i = pow(2, associativity); i > 0; i--) {
-            //    if (cache[setNumber][i] == tagValue) {
-            //       hitOrMiss = "Hit";
-            //       hits++;
-            //       found = TRUE;
-
-            //       for(j = i; j < pow(2, associativity); j++) {
-            //          cache[setNumber][j] = cache[setNumber][(j + 1)];
-            //       }
-
-            //       cache[setNumber][j] = tagValue;
-            //       break;
-            //    } else if (cache[setNumber][i] == - 1) {
-            //       hitOrMiss = "Miss";
-            //       misses++;
-            //       found = TRUE;
-
-            //       for(j = 0; j < pow(2, associativity); j++) {
-            //          cache[setNumber][j] = cache[setNumber][(j + 1)];
-            //       }
-
-            //       cache[setNumber][j] = tagValue;
-            //       break;
-            //    }
-            // }
-
-            // if (!found) {
-            //    // This means the array is full with values.
-            //    hitOrMiss = "Miss";
-            //    misses++;
-
-            //    for(j = 0; j < pow(2, associativity); j++) {
-            //       cache[setNumber][j] = cache[setNumber][(j + 1)];
-            //    }
-
-            //    cache[setNumber][j] = tagValue;
-            // }
          }
 
          missRatio = (float) misses / (float) accesses;
@@ -372,13 +324,6 @@ int main(int argc, char *argv[]) {
                   printf("%x,", printArray[i]);
                }
             }
-
-           /* If all hell breaks loose, use these comments to remove sorting. */
-            // for(i = 0; i < pow(2, associativity); i++) {
-            //    if(cache[setNumber][i] != -1) {
-            //       printf("%x,", cache[setNumber][i]);
-            //    }
-            // }
 
             printf("\n");
          }
@@ -431,11 +376,6 @@ int main(int argc, char *argv[]) {
                   hitOrMiss = "Miss";
                   misses++;
                   found = TRUE;
-
-                  // for(j = 0; j < (cacheSize - 1); j++) {
-                  //    cache[j][0] = cache[(j + 1)][0];
-                  // }
-
                   cache[i][0] = tagValue;
                   lastIndex++;
                   break;
@@ -483,13 +423,6 @@ int main(int argc, char *argv[]) {
                   printf("%x,", printArray[i]);
                }
             }
-
-           /* If all hell breaks loose, use these comments to remove sorting. */
-            // for(i = 0; i < cacheSize; i++) {
-            //    if(cache[i][0] != -1) {
-            //       printf("%x,", cache[i][0]);
-            //    }
-            // }
 
             printf("\n");
          }
