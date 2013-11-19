@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
    int lastIndex = 0;
    int misses = 0;
    int *oldTagValue;
+   int *printArray;
 
          /* This turns on the various modes. They are basically all booleans. */
    int directMapped = FALSE;
@@ -137,6 +138,7 @@ int main(int argc, char *argv[]) {
    if (directMapped || fullyAssociative) {
       cacheSize = pow(2, index);      
       cache = (int **)malloc(cacheSize * sizeof(int *));
+      printArray = (int *)malloc(cacheSize * sizeof(int));
 
       for (i = 0; i < cacheSize; i++) {
         cache[i] = (int *)malloc(1 * sizeof(int));
@@ -148,8 +150,9 @@ int main(int argc, char *argv[]) {
       cache = (int **)malloc(cacheSize * sizeof(int *));
 
       for (i = 0; i < cacheSize; i++) {
-        cache[i] = (int *)malloc((int) pow(2, associativity) * sizeof(int));
-        oldTagValue = (int *)malloc((int) pow(2, associativity) * sizeof(int));
+         cache[i] = (int *)malloc((int) pow(2, associativity) * sizeof(int));
+         oldTagValue = (int *)malloc((int) pow(2, associativity) * sizeof(int));
+         printArray = (int *)malloc((int) pow(2, associativity) * sizeof(int));
       }
 
    }
@@ -264,28 +267,29 @@ int main(int argc, char *argv[]) {
          }
 
          if (lru) {
-            for(i = pow(2, associativity); i > 0; i--) {
+            for(i = 0; i < pow(2, associativity); i++) {
                if (cache[setNumber][i] == tagValue) {
                   hitOrMiss = "Hit";
                   hits++;
                   found = TRUE;
 
-                  for(j = i; j < pow(2, associativity); j++) {
+                  for(j = i; j < (lastIndex - 1); j++) {
                      cache[setNumber][j] = cache[setNumber][(j + 1)];
                   }
 
-                  cache[setNumber][j] = tagValue;
+                  cache[setNumber][(lastIndex - 1)] = tagValue;
                   break;
-               } else if (cache[setNumber][i] == - 1) {
+               } else if (cache[setNumber][i] == -1) {
                   hitOrMiss = "Miss";
                   misses++;
                   found = TRUE;
 
-                  for(j = 0; j < pow(2, associativity); j++) {
-                     cache[setNumber][j] = cache[setNumber][(j + 1)];
-                  }
+                  // for(j = 0; j < (cacheSize - 1); j++) {
+                  //    cache[j][0] = cache[(j + 1)][0];
+                  // }
 
-                  cache[setNumber][j] = tagValue;
+                  cache[setNumber][i] = tagValue;
+                  lastIndex++;
                   break;
                }
             }
@@ -295,12 +299,50 @@ int main(int argc, char *argv[]) {
                hitOrMiss = "Miss";
                misses++;
 
-               for(j = 0; j < pow(2, associativity); j++) {
+               for(j = 0; j < ((pow(2, associativity)) - 1); j++) {
                   cache[setNumber][j] = cache[setNumber][(j + 1)];
                }
 
                cache[setNumber][j] = tagValue;
             }
+
+            // for(i = pow(2, associativity); i > 0; i--) {
+            //    if (cache[setNumber][i] == tagValue) {
+            //       hitOrMiss = "Hit";
+            //       hits++;
+            //       found = TRUE;
+
+            //       for(j = i; j < pow(2, associativity); j++) {
+            //          cache[setNumber][j] = cache[setNumber][(j + 1)];
+            //       }
+
+            //       cache[setNumber][j] = tagValue;
+            //       break;
+            //    } else if (cache[setNumber][i] == - 1) {
+            //       hitOrMiss = "Miss";
+            //       misses++;
+            //       found = TRUE;
+
+            //       for(j = 0; j < pow(2, associativity); j++) {
+            //          cache[setNumber][j] = cache[setNumber][(j + 1)];
+            //       }
+
+            //       cache[setNumber][j] = tagValue;
+            //       break;
+            //    }
+            // }
+
+            // if (!found) {
+            //    // This means the array is full with values.
+            //    hitOrMiss = "Miss";
+            //    misses++;
+
+            //    for(j = 0; j < pow(2, associativity); j++) {
+            //       cache[setNumber][j] = cache[setNumber][(j + 1)];
+            //    }
+
+            //    cache[setNumber][j] = tagValue;
+            // }
          }
 
          missRatio = (float) misses / (float) accesses;
@@ -310,11 +352,33 @@ int main(int argc, char *argv[]) {
                tagValue, setNumber, hitOrMiss, hits, misses, accesses, 
                missRatio);
          
-            for(i = 0; i < pow(2, associativity); i++) {
-               if(cache[setNumber][i] != -1) {
-                  printf("%x,", cache[setNumber][i]);
+                              /* Copy the array, bubblesort it, then print it */
+            for(i = 0; i < pow(2, associativity) ; i++) {
+               printArray[i] = cache[setNumber][i];
+            }
+
+            for(i = 0; i < pow(2, associativity) - 1; i++) {
+               for(j = 0; j < (((int) pow(2, associativity)) - 1 - i); j++) {
+                  if(printArray[j] > printArray[(j + 1)]) {
+                     int temp = printArray[j];
+                     printArray[j] = printArray[(j + 1)];
+                     printArray[(j + 1)] = temp;
+                  }
                }
             }
+
+            for(i = 0; i < pow(2, associativity); i++) {
+               if(printArray[i] != -1) {
+                  printf("%x,", printArray[i]);
+               }
+            }
+
+           /* If all hell breaks loose, use these comments to remove sorting. */
+            // for(i = 0; i < pow(2, associativity); i++) {
+            //    if(cache[setNumber][i] != -1) {
+            //       printf("%x,", cache[setNumber][i]);
+            //    }
+            // }
 
             printf("\n");
          }
@@ -396,14 +460,36 @@ int main(int argc, char *argv[]) {
          if (tracing) {
 
             printf("|%8x|%8x|%8d|%5s|%7d|%7d|%8d|%.8f| ", hexAddress, 
-               tagValue, setNumber, hitOrMiss, hits, misses, accesses, 
+               tagValue, 0, hitOrMiss, hits, misses, accesses, 
                missRatio);
          
+                              /* Copy the array, bubblesort it, then print it */
             for(i = 0; i < cacheSize; i++) {
-               if(cache[i][0] != -1) {
-                  printf("%x,", cache[i][0]);
+               printArray[i] = cache[i][0];
+            }
+
+            for(i = 0; i < cacheSize; i++) {
+               for(j = 0; j < (cacheSize - 1 - i); j++) {
+                  if(printArray[j] > printArray[(j + 1)]) {
+                     int temp = printArray[j];
+                     printArray[j] = printArray[(j + 1)];
+                     printArray[(j + 1)] = temp;
+                  }
                }
             }
+
+            for(i = 0; i < cacheSize; i++) {
+               if(printArray[i] != -1) {
+                  printf("%x,", printArray[i]);
+               }
+            }
+
+           /* If all hell breaks loose, use these comments to remove sorting. */
+            // for(i = 0; i < cacheSize; i++) {
+            //    if(cache[i][0] != -1) {
+            //       printf("%x,", cache[i][0]);
+            //    }
+            // }
 
             printf("\n");
          }
