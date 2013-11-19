@@ -28,12 +28,12 @@ int main(int argc, char *argv[]) {
    int associativity = 0;
    int hits = 0;
    int indexValue = 0;
+   int lastIndex = 0;
    int misses = 0;
    int *oldTagValue;
 
-       /* This turns on verbose, fifo, or lru mode. It is basically a boolean */
+         /* This turns on the various modes. They are basically all booleans. */
    int directMapped = FALSE;
-   int empty = FALSE;
    int fifo = FALSE;
    int fullyAssociative = FALSE;
    int found = FALSE;
@@ -76,7 +76,6 @@ int main(int argc, char *argv[]) {
                                /* Calculate the tag, index, and offset values */
    int index = atoi(argv[1]) - atoi(argv[2]);
    int offset = atoi(argv[2]);
-   //int tag = 32 - index - offset;
 
                        /* Set the associativity (0 = direct, 1 = 2-way, etc.) */
    if (atoi(argv[3]) == 0) {
@@ -117,13 +116,13 @@ int main(int argc, char *argv[]) {
       return 1;
    }
 
-                          /* Initializing the array that simulates the cache. */
+                  /* Initializing the dynamic array that simulates the cache. */
    int **cache;
    int cacheSize;
    int i;
    int j;
 
-   if (associativity == 0) {
+   if (directMapped || fullyAssociative) {
       cacheSize = pow(2, index);      
       cache = (int **)malloc(cacheSize * sizeof(int *));
 
@@ -143,25 +142,25 @@ int main(int argc, char *argv[]) {
 
    }
 
-   // for(i = 0; i < cacheSize; i++) {
-   //    for (j = 0; j < pow(2, associativity); j++) {
-   //       fprintf(stdout, "[%d][%d]: ", i, j);
-   //       cache[i][j] = -1;
-   //       fprintf(stdout, "[%d] ", cache[i][j]);
-   //    }
-   //    fprintf(stdout, "\n");
-   // }
-   // fprintf(stdout, "\n");
+   for(i = 0; i < cacheSize; i++) {
+      for (j = 0; j < pow(2, associativity); j++) {
+         fprintf(stdout, "[%d][%d]: ", i, j);
+         cache[i][j] = -1;
+         fprintf(stdout, "[%d] ", cache[i][j]);
+      }
+      fprintf(stdout, "\n");
+   }
+   fprintf(stdout, "\n");
 
                                   /* Create the table header if tracing is on */
    if (tracing) {
       printf("*--------------------------------------------------------------");
-      printf("---------------*\n");
-      printf("|%8s|%8s|%8s|%8s|", "Address", "Tag", "Set #", "Old Tag");
-      printf("%5s|%7s|%7s|%8s|", "Hit?", "Hits", "Misses", "Accesses");
-      printf("%8s|\n", "Miss Ratio");
+      printf("------*\n");
+      printf("|%8s|%8s|%8s|%5s|", "Address", "Tag", "Set #", "Hit?");
+      printf("%7s|%7s|%8s|%8s|", "Hits", "Misses", "Accesses", "Miss Ratio");
+      printf("%8s\n", "Tag(s)");
       printf("|==============================================================");
-      printf("===============|\n");
+      printf("======|\n");
    }
 
    while (fgets(lineBuffer, LINESZ, file) != NULL) {
@@ -171,7 +170,7 @@ int main(int argc, char *argv[]) {
       accesses++;
       found = FALSE;
                                          /* Meaning this is fully associative */
-      if ((atoi(argv[3]) < 0) || (atoi(argv[3]) > index)) {
+      if (fullyAssociative) {
          shiftValue = pow(2, MAX_SZ) - pow(2, (atoi(argv[1]) - index));
          tagValue = hexAddress & shiftValue;
          tagValue = tagValue >> (atoi(argv[1]) - index);
@@ -187,80 +186,65 @@ int main(int argc, char *argv[]) {
          blockNumber = blockNumber >> offset;
          indexValue = (int) blockNumber;
          setNumber = 0;
-      } else if (fullyAssociative) {
-         setNumber = hexAddress >> (atoi(argv[2]));
-         setNumber = setNumber % (int)(pow(2, (index - associativity)));
       } else {
          setNumber = hexAddress >> (atoi(argv[2]));
          setNumber = setNumber % (int)(pow(2, (index - associativity)));
       }
 
       if (directMapped) {
-         // Old Direct Mapped Code
-         oldTagValue[0] = cache[indexValue][0];
+         //oldTagValue[0] = cache[indexValue][0];
 
-         if (oldTagValue[0] == -1) {
+         if (tagValue == cache[indexValue][0]) {
+            // If tag is found inside set, you have a hit.
+            hitOrMiss = "Hit";
+            hits++;
+         } else if (cache[indexValue][0] == -1) {
             // If the field contains -1, it's an "empty" entry.
             hitOrMiss = "Miss";
             cache[indexValue][0] = tagValue;
-            misses++;
+            misses++;            
          } else {
-            if (tagValue == oldTagValue[0]) {
-               // If tag is found inside set, you have a hit.
-               hitOrMiss = "Hit";
-               hits++;
-            } else {
-               // If tag is not found anywhere inside set, you have a miss.
-               hitOrMiss = "Miss";
-               cache[indexValue][0] = tagValue;
-               misses++;
-            }
+            // If tag is not found anywhere inside set, you have a miss.
+            hitOrMiss = "Miss";
+            cache[indexValue][0] = tagValue;
+            misses++;            
          }
 
          missRatio = (float) misses / (float) accesses;
          
          if (tracing) {
-            if (oldTagValue[0] == -1) {
-               printf("|%8x|%8x|%8d|%8s|%5s|%7d|%7d|%8d|%.8f|", 
-                  hexAddress, tagValue, setNumber, " ", hitOrMiss, hits, 
-                  misses, accesses, missRatio);
-            } else {
-               printf("|%8x|%8x|%8d|%8d|%5s|%7d|%7d|%8d|%.8f|", 
-                  hexAddress, tagValue, setNumber, oldTagValue[0], hitOrMiss, 
-                  hits, misses, accesses, missRatio);
-            }
+            printf("|%8x|%8x|%8d|%5s|%7d|%7d|%8d|%.8f| %x", hexAddress, 
+               tagValue, setNumber, hitOrMiss, hits, misses, accesses, 
+               missRatio, tagValue);
          
             printf("\n");
          }
 
-      } else if(fullyAssociative || nWayAssociative) {
+      } else if(nWayAssociative) {
          if (fifo) {
             for(i = 0; i < pow(2, associativity); i++) {
-               fprintf(stdout, "[%d][%d]:%d ", setNumber,i,cache[setNumber][i]);
+               //fprintf(stdout, "[%d][%d]:%d ", setNumber,i,cache[setNumber][i]);
 
-               if (cache[setNumber][i] == -1) {
-                  hitOrMiss = "Miss";
-                  cache[setNumber][i] = tagValue;
-                  misses++;
-                  found = TRUE;
-                  empty = TRUE;
-                  break;
-               } else if (cache[setNumber][i] == tagValue) {
+               if (cache[setNumber][i] == tagValue) {
                   // Tag is found inside the set somewhere, we have a hit.
                   hitOrMiss = "Hit";
                   hits++;
                   found = TRUE;
-                  empty = FALSE;
                   break;
-               } 
+               } else if (cache[setNumber][i] == -1) {
+                  hitOrMiss = "Miss";
+                  cache[setNumber][i] = tagValue;
+                  misses++;
+                  found = TRUE;
+                  break;                  
+               }
             }
 
-            fprintf(stdout, "\n");
+            //fprintf(stdout, "\n");
 
             if (!found) {
                // This means the array is full with values.
                hitOrMiss = "Miss";
-               empty = FALSE;
                // Shift everything down 1 and insert at leftmost index.
                for(i = pow(2, associativity); i > 0; i--) {
                   cache[setNumber][i] = cache[setNumber][(i - 1)];
@@ -272,26 +256,24 @@ int main(int argc, char *argv[]) {
          }
 
          if (lru) {
-            for(i = pow(2, associativity); i > 0; i--) {
-               if (cache[setNumber][i] == -1) {
-                  hitOrMiss = "Miss";
-                  misses++;
+            for(i = (pow(2, associativity) - 1); i > 0; i--) {
+               if (cache[setNumber][i] == tagValue) {
+                  hitOrMiss = "Hit";
+                  hits++;
                   found = TRUE;
-                  empty = TRUE;
 
-                  for(j = 0; j < pow(2, associativity); j++) {
+                  for(j = i; j < pow(2, associativity); j++) {
                      cache[setNumber][j] = cache[setNumber][(j + 1)];
                   }
 
                   cache[setNumber][j] = tagValue;
                   break;
-               } else if (cache[setNumber][i] == tagValue) {
-                  hitOrMiss = "Hit";
-                  hits++;
+               } else if (cache[setNumber][i] == -1) {
+                  hitOrMiss = "Miss";
+                  misses++;
                   found = TRUE;
-                  empty = FALSE;
 
-                  for(j = i; j < pow(2, associativity); j++) {
+                  for(j = 0; j < pow(2, associativity); j++) {
                      cache[setNumber][j] = cache[setNumber][(j + 1)];
                   }
 
@@ -304,7 +286,6 @@ int main(int argc, char *argv[]) {
                // This means the array is full with values.
                hitOrMiss = "Miss";
                misses++;
-               empty = FALSE;
 
                for(j = 0; j < pow(2, associativity); j++) {
                   cache[setNumber][j] = cache[setNumber][(j + 1)];
@@ -317,22 +298,151 @@ int main(int argc, char *argv[]) {
          missRatio = (float) misses / (float) accesses;
          
          if (tracing) {
-            if (empty) {
-               printf("|%8x|%8x|%8d|%8s|%5s|%7d|%7d|%8d|%.8f|", 
-                  hexAddress, tagValue, setNumber, " ", hitOrMiss, hits, 
-                  misses, accesses, missRatio);
-            } else {
-               printf("|%8x|%8x|%8d|%8d|%5s|%7d|%7d|%8d|%.8f|", 
-                  hexAddress, tagValue, setNumber, cache[setNumber][i], 
-                  hitOrMiss, hits, misses, accesses, missRatio);
-            }
+            printf("|%8x|%8x|%8d|%5s|%7d|%7d|%8d|%.8f| ", hexAddress, 
+               tagValue, setNumber, hitOrMiss, hits, misses, accesses, 
+               missRatio);
          
+            for(i = 0; i < pow(2, associativity); i++) {
+               if(cache[setNumber][i] != -1) {
+                  printf("%x,", cache[setNumber][i]);
+               }
+            }
+
             printf("\n");
          }
 
       } else if (fullyAssociative) {
-         // Do fully associative code here.
-         // Will need to go through whole array and use FIFO and LRU algorithms.
+         if (fifo) {
+            for (i = 0; i <= lastIndex; i++) {
+               if (cache[i][0] == tagValue) {
+                  hitOrMiss = "Hit";
+                  hits++;
+                  found = TRUE;
+                  break;
+               } else if (cache[i][0] == -1) {
+                  hitOrMiss = "Miss";
+                  cache[i][0] = tagValue;
+                  misses++;
+                  found = TRUE;
+                  lastIndex = i + 1;
+                  break;
+               }
+            }
+
+            if (lastIndex > cacheSize && !found) {
+               hitOrMiss = "Miss";
+
+               for(i = 0; i < cacheSize; i++) {
+                  cache[i][0] = cache[(i + 1)][0];
+               }
+
+               cache[cacheSize][0] = tagValue;
+               misses++;
+            }
+
+            // for(i = 0; i < cacheSize; i++) {
+            //    //fprintf(stdout, "[%d][%d]:%d\n", setNumber,i,cache[setNumber][i]);
+
+            //    if (cache[i][0] == tagValue) {
+            //       // Tag is found inside the set somewhere, we have a hit.
+            //       hitOrMiss = "Hit";
+            //       hits++;
+            //       found = TRUE;
+            //       break;
+            //    } else if (cache[i][0] == -1) {
+            //       hitOrMiss = "Miss";
+            //       cache[i][0] = tagValue;
+            //       misses++;
+            //       found = TRUE;
+            //       break;                  
+            //    }
+            // }
+
+            // //fprintf(stdout, "\n");
+
+            // if (!found) {
+            //    // This means the array is full with values.
+            //    hitOrMiss = "Miss";
+            //    // Shift everything down 1 and insert at leftmost index.
+            //    for(i = pow(2, associativity); i > 0; i--) {
+            //       cache[setNumber][i] = cache[setNumber][(i - 1)];
+            //    }
+
+            //    cache[setNumber][i] = tagValue;
+            //    misses++;
+            // }
+         }
+
+         if (lru) {
+            for(i = pow(2, associativity); i > 0; i--) {
+               if (cache[setNumber][i] == tagValue) {
+                  hitOrMiss = "Hit";
+                  hits++;
+                  found = TRUE;
+
+                  for(j = i; j < pow(2, associativity); j++) {
+                     cache[setNumber][j] = cache[setNumber][(j + 1)];
+                  }
+
+                  cache[setNumber][j] = tagValue;
+                  break;
+               } else if (cache[setNumber][i] == -1) {
+                  hitOrMiss = "Miss";
+                  misses++;
+                  found = TRUE;
+
+                  for(j = 0; j < pow(2, associativity); j++) {
+                     cache[setNumber][j] = cache[setNumber][(j + 1)];
+                  }
+
+                  cache[setNumber][j] = tagValue;
+                  break;
+               }
+            }
+
+            if (!found) {
+               // This means the array is full with values.
+               hitOrMiss = "Miss";
+               misses++;
+
+               for(j = 0; j < pow(2, associativity); j++) {
+                  cache[setNumber][j] = cache[setNumber][(j + 1)];
+               }
+
+               cache[setNumber][j] = tagValue;
+            }
+         }
+
+         missRatio = (float) misses / (float) accesses;
+         
+         if (tracing) {
+
+            printf("|%8x|%8x|%8d|%5s|%7d|%7d|%8d|%.8f| ", hexAddress, 
+               tagValue, setNumber, hitOrMiss, hits, misses, accesses, 
+               missRatio);
+         
+            for(i = 0; i < cacheSize; i++) {
+               if(cache[i][0] != -1) {
+                  printf("%x,", cache[i][0]);
+               }
+            }
+
+            printf("\n");
+
+            // if (empty) {
+            //    printf("|%8x|%8x|%8d|%8s|%5s|%7d|%7d|%8d|%.8f|", 
+            //       hexAddress, tagValue, setNumber, " ", hitOrMiss, hits, 
+            //       misses, accesses, missRatio);
+            // } else {
+            //    printf("|%8x|%8x|%8d|%8d|%5s|%7d|%7d|%8d|%.8f|", 
+            //       hexAddress, tagValue, setNumber, cache[setNumber][i], 
+            //       hitOrMiss, hits, misses, accesses, missRatio);
+            // }
+         
+            // printf("\n");
+         }
+
+
       }
 
    }
@@ -340,7 +450,7 @@ int main(int argc, char *argv[]) {
                                    /* Print the table footer if tracing is on */
    if (tracing) {
       printf("*--------------------------------------------------------------");
-      printf("---------------*\n");
+      printf("-------*\n");
    }
 
                                      /* Print the final output of the program */
