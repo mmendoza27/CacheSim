@@ -160,6 +160,7 @@ int main(int argc, char *argv[]) {
    for(i = 0; i < cacheSize; i++) {
       for (j = 0; j < pow(2, associativity); j++) {
          cache[i][j] = -1;
+         printf("[%d][%d]:[%d]\n", i, j, cache[i][j]);
       }
    }
 
@@ -261,13 +262,13 @@ int main(int argc, char *argv[]) {
          }
 
          if (lru) {
-            for(i = pow(2, associativity); i > 0; i--) {
+            for(i = pow(2, associativity) - 1; i >= 0; i--) {
                if (cache[setNumber][i] == tagValue) {
                   hitOrMiss = "Hit";
                   hits++;
                   found = TRUE;
 
-                  for(j = i; j < pow(2, associativity); j++) {
+                  for(j = i; j < pow(2, associativity) - 1; j++) {
                      cache[setNumber][j] = cache[setNumber][(j + 1)];
                   }
 
@@ -278,7 +279,7 @@ int main(int argc, char *argv[]) {
                   misses++;
                   found = TRUE;
 
-                  for(j = 0; j < pow(2, associativity); j++) {
+                  for(j = 0; j < pow(2, associativity) - 1; j++) {
                      cache[setNumber][j] = cache[setNumber][(j + 1)];
                   }
 
@@ -309,8 +310,9 @@ int main(int argc, char *argv[]) {
                missRatio);
          
                               /* Copy the array, bubblesort it, then print it */
-            for(i = 0; i < pow(2, associativity) ; i++) {
+            for(i = 0; i < pow(2, associativity); i++) {
                printArray[i] = cache[setNumber][i];
+               printf("[%d]:[%d]", i, printArray[i]);
             }
 
             for(i = 0; i < pow(2, associativity) - 1; i++) {
