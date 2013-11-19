@@ -1,0 +1,119 @@
+ls -l Output
+================================================================================
+-rw-r--r--@ 1 mmendoza27  staff  12859 Nov 19 12:47 myTest.txt
+
+wc Output
+================================================================================
+    1285    1286   12859 myTest.txt
+
+First 15 lines of the file
+================================================================================
+100000fa0
+100000fa1
+100000fa4
+100000fab
+100000fb5
+100000fbc
+100000fbf
+100000fc3
+100000fc6
+100000fcb
+100000fd5
+100000fd9
+100000fde
+100000fe1
+100000fe5
+
+Last 15 lines of the file
+================================================================================
+1000029c8
+1000029ce
+1000029d0
+1000029d5
+1000029dc
+1000029e1
+1000029e7
+1000029e9
+1000029ee
+1000029f5
+1000029fb
+1000029fe
+100002a05
+100002a06
+
+Command Line
+================================================================================
+./CacheSim2 16 6 0 lru off myTest.txt
+./CacheSim2 16 6 0 fifo off myTest.txt
+./CacheSim2 16 6 1 lru off myTest.txt
+./CacheSim2 16 6 1 fifo off myTest.txt
+./CacheSim2 16 6 2 lru off myTest.txt
+./CacheSim2 16 6 2 fifo off myTest.txt
+./CacheSim2 16 6 3 lru off myTest.txt
+./CacheSim2 16 6 3 fifo off myTest.txt
+./CacheSim2 16 6 -1 lru off myTest.txt
+./CacheSim2 16 6 -1 fifo off myTest.txt
+
+
+Program Output
+================================================================================
+
+Name: Michael A. Mendoza
+Parameters: 16 6 0 lru off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 0 fifo off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 1 lru off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 1 fifo off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 2 lru off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 2 fifo off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 3 lru off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 3 fifo off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 -1 lru off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
+
+Name: Michael A. Mendoza
+Parameters: 16 6 -1 fifo off myTest.txt
+Hits: 1248
+Misses: 38
+Miss Ratio: 0.02954899
