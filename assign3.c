@@ -311,7 +311,6 @@ int main(int argc, char *argv[]) {
                               /* Copy the array, bubblesort it, then print it */
             for(i = 0; i < pow(2, associativity); i++) {
                printArray[i] = cache[setNumber][i];
-               printf("[%d]:[%d]", i, printArray[i]);
             }
 
             for(i = 0; i < pow(2, associativity) - 1; i++) {
